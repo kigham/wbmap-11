@@ -1,0 +1,561 @@
+﻿<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="data/strateconservation_0.js"></script>
+        <script src="data/Rseau_hydrographique_UFA_Karagoua_1.js"></script>
+        <script src="data/Rseau_Routier_UFA_Karagoua_2.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[1.2774067765496688,13.585029593967459],[1.6083509537022735,13.968737723110458]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        function pop_strateconservation_0(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Value'] !== null ? autolinker.link(String(feature.properties['Value']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Red'] !== null ? autolinker.link(String(feature.properties['Red']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Green'] !== null ? autolinker.link(String(feature.properties['Green']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Blue'] !== null ? autolinker.link(String(feature.properties['Blue']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Opacity'] !== null ? autolinker.link(String(feature.properties['Opacity']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Class_Name'] !== null ? autolinker.link(String(feature.properties['Class_Name']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Area</th>\
+                        <td>' + (feature.properties['Area'] !== null ? autolinker.link(String(feature.properties['Area']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Code_strat</th>\
+                        <td>' + (feature.properties['Code_strat'] !== null ? autolinker.link(String(feature.properties['Code_strat']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Strate</th>\
+                        <td>' + (feature.properties['Strate'] !== null ? autolinker.link(String(feature.properties['Strate']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Densité_H</th>\
+                        <td>' + (feature.properties['Densité_H'] !== null ? autolinker.link(String(feature.properties['Densité_H']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_strateconservation_0_0(feature) {
+            switch(String(feature.properties['Strate'])) {
+                case 'Culture':
+                    return {
+                pane: 'pane_strateconservation_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(224,232,133,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Forêt  marécageuse à raphiale':
+                    return {
+                pane: 'pane_strateconservation_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(41,220,194,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Forêt Dense Humide Sempervirente à faible densit':
+                    return {
+                pane: 'pane_strateconservation_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(21,103,10,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Forêt Dense Humide Sempervirente à forte densit':
+                    return {
+                pane: 'pane_strateconservation_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,59,0,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Forêt Marécageuse Inondée en Permanence':
+                    return {
+                pane: 'pane_strateconservation_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(124,163,211,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Forêt Marécageuse Inondée Temporairement':
+                    return {
+                pane: 'pane_strateconservation_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(72,206,227,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Forêt Secondaire Adulte':
+                    return {
+                pane: 'pane_strateconservation_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(57,177,49,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Forêt Secondaire Jeune':
+                    return {
+                pane: 'pane_strateconservation_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(41,220,21,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Plan d\'eau':
+                    return {
+                pane: 'pane_strateconservation_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,59,225,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_strateconservation_0');
+        map.getPane('pane_strateconservation_0').style.zIndex = 400;
+        map.getPane('pane_strateconservation_0').style['mix-blend-mode'] = 'normal';
+        var layer_strateconservation_0 = new L.geoJson(json_strateconservation_0, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_strateconservation_0',
+            layerName: 'layer_strateconservation_0',
+            pane: 'pane_strateconservation_0',
+            onEachFeature: pop_strateconservation_0,
+            style: style_strateconservation_0_0,
+        });
+        bounds_group.addLayer(layer_strateconservation_0);
+        map.addLayer(layer_strateconservation_0);
+        function pop_Rseau_hydrographique_UFA_Karagoua_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(String(feature.properties['Id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Category'] !== null ? autolinker.link(String(feature.properties['Category']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Type'] !== null ? autolinker.link(String(feature.properties['Type']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Nom'] !== null ? autolinker.link(String(feature.properties['Nom']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Rseau_hydrographique_UFA_Karagoua_1_0() {
+            return {
+                pane: 'pane_Rseau_hydrographique_UFA_Karagoua_1',
+                opacity: 1,
+                color: 'rgba(31,120,180,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Rseau_hydrographique_UFA_Karagoua_1');
+        map.getPane('pane_Rseau_hydrographique_UFA_Karagoua_1').style.zIndex = 401;
+        map.getPane('pane_Rseau_hydrographique_UFA_Karagoua_1').style['mix-blend-mode'] = 'normal';
+        var layer_Rseau_hydrographique_UFA_Karagoua_1 = new L.geoJson(json_Rseau_hydrographique_UFA_Karagoua_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Rseau_hydrographique_UFA_Karagoua_1',
+            layerName: 'layer_Rseau_hydrographique_UFA_Karagoua_1',
+            pane: 'pane_Rseau_hydrographique_UFA_Karagoua_1',
+            onEachFeature: pop_Rseau_hydrographique_UFA_Karagoua_1,
+            style: style_Rseau_hydrographique_UFA_Karagoua_1_0,
+        });
+        bounds_group.addLayer(layer_Rseau_hydrographique_UFA_Karagoua_1);
+        map.addLayer(layer_Rseau_hydrographique_UFA_Karagoua_1);
+        function pop_Rseau_Routier_UFA_Karagoua_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(String(feature.properties['Id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Type'] !== null ? autolinker.link(String(feature.properties['Type']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Distance'] !== null ? autolinker.link(String(feature.properties['Distance']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Rseau_Routier_UFA_Karagoua_2_0() {
+            return {
+                pane: 'pane_Rseau_Routier_UFA_Karagoua_2',
+                opacity: 1,
+                color: 'rgba(219,30,42,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Rseau_Routier_UFA_Karagoua_2');
+        map.getPane('pane_Rseau_Routier_UFA_Karagoua_2').style.zIndex = 402;
+        map.getPane('pane_Rseau_Routier_UFA_Karagoua_2').style['mix-blend-mode'] = 'normal';
+        var layer_Rseau_Routier_UFA_Karagoua_2 = new L.geoJson(json_Rseau_Routier_UFA_Karagoua_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Rseau_Routier_UFA_Karagoua_2',
+            layerName: 'layer_Rseau_Routier_UFA_Karagoua_2',
+            pane: 'pane_Rseau_Routier_UFA_Karagoua_2',
+            onEachFeature: pop_Rseau_Routier_UFA_Karagoua_2,
+            style: style_Rseau_Routier_UFA_Karagoua_2_0,
+        });
+        bounds_group.addLayer(layer_Rseau_Routier_UFA_Karagoua_2);
+        map.addLayer(layer_Rseau_Routier_UFA_Karagoua_2);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        setBounds();
+        </script>
+    </body>
+</html>
+
+
+<head><meta charset="utf-8" /><script src="file:///C:/Users/SEFYD/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins/DataPlotly/jsscripts/polyfill.min.js"></script><script src="file:///C:/Users/SEFYD/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins/DataPlotly/jsscripts/plotly-1.52.2.min.js"></script></head><div>                            <div id="9b277676-5067-46b1-a1a1-348021655ff3" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("9b277676-5067-46b1-a1a1-348021655ff3")) {                    Plotly.newPlot(                        "9b277676-5067-46b1-a1a1-348021655ff3",                        [{"customdata":[""],"hoverinfo":"all","ids":[0,1,2,3,4,5,6,7,8],"line":{"dash":"solid","width":1.0},"marker":{"color":"#8ebad9","colorbar":{"len":0.8},"colorscale":[[0.0,"rgb(255,255,255)"],[0.125,"rgb(240,240,240)"],[0.25,"rgb(217,217,217)"],[0.375,"rgb(189,189,189)"],[0.5,"rgb(150,150,150)"],[0.625,"rgb(115,115,115)"],[0.75,"rgb(82,82,82)"],[0.875,"rgb(37,37,37)"],[1.0,"rgb(0,0,0)"]],"line":{"color":"#1f77b4","width":1.0},"reversescale":false,"showscale":false,"size":10.0,"symbol":0},"mode":"markers","name":"","opacity":1.0,"text":[],"textposition":"top center","x":[],"xaxis":"x","y":[],"yaxis":"y","type":"scatter"},{"customdata":["Code_strat"],"ids":[0,1,2,3,4,5,6,7,8],"marker":{"color":"#39b131","colorbar":{"len":0.8},"colorscale":[[0.0,"rgb(255,255,255)"],[0.125,"rgb(240,240,240)"],[0.25,"rgb(217,217,217)"],[0.375,"rgb(189,189,189)"],[0.5,"rgb(150,150,150)"],[0.625,"rgb(115,115,115)"],[0.75,"rgb(82,82,82)"],[0.875,"rgb(37,37,37)"],[1.0,"rgb(0,0,0)"]],"line":{"color":"#1f77b4","width":1.0},"reversescale":false,"showscale":false},"name":"Densit\u00e9_H","opacity":1.0,"orientation":"v","text":[],"textposition":"auto","x":["CU","FMIT","FMRA","FMIP","FSA","FSJ","FDHS\u002fd","FDHS\u002fb","Eau"],"xaxis":"x2","y":[0.0,647903.0,134084.0,147801.0,283373.0,9923.64,2995680.0,3565720.0,0.0],"yaxis":"y2","type":"bar"},{"customdata":["Code_strat"],"ids":[0,1,2,3,4,5,6,7,8],"marker":{"color":"#39b131","colorbar":{"len":0.8},"colorscale":[[0.0,"rgb(255,255,255)"],[0.125,"rgb(240,240,240)"],[0.25,"rgb(217,217,217)"],[0.375,"rgb(189,189,189)"],[0.5,"rgb(150,150,150)"],[0.625,"rgb(115,115,115)"],[0.75,"rgb(82,82,82)"],[0.875,"rgb(37,37,37)"],[1.0,"rgb(0,0,0)"]],"line":{"color":"#1f77b4","width":1.0},"reversescale":false,"showscale":false},"name":"Area","opacity":1.0,"orientation":"v","text":[],"textposition":"auto","x":["CU","FMIT","FMRA","FMIP","FSA","FSJ","FDHS\u002fd","FDHS\u002fb","Eau"],"xaxis":"x3","y":[1.67272755822,6479.03211059,2681.68652006,2956.02377596,1889.15451043,165.3939806,9985.58668506,7923.81493008,324.169786127],"yaxis":"y3","type":"bar"},{"customdata":["Code_strat"],"ids":[0,1,2,3,4,5,6,7,8],"marker":{"color":"#a431b1","colorbar":{"len":0.8},"colorscale":[[0.0,"rgb(255,255,255)"],[0.125,"rgb(240,240,240)"],[0.25,"rgb(217,217,217)"],[0.375,"rgb(189,189,189)"],[0.5,"rgb(150,150,150)"],[0.625,"rgb(115,115,115)"],[0.75,"rgb(82,82,82)"],[0.875,"rgb(37,37,37)"],[1.0,"rgb(0,0,0)"]],"line":{"color":"#1f77b4","width":1.0},"reversescale":false,"showscale":false},"name":"Area","opacity":1.0,"orientation":"v","text":[],"textposition":"auto","x":["CU","FMIT","FMRA","FMIP","FSA","FSJ","FDHS\u002fd","FDHS\u002fb","Eau"],"xaxis":"x4","y":[1.67272755822,6479.03211059,2681.68652006,2956.02377596,1889.15451043,165.3939806,9985.58668506,7923.81493008,324.169786127],"yaxis":"y4","type":"bar"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"#E5ECF6","showlakes":true,"showland":true,"subunitcolor":"white"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"bgcolor":"#E5ECF6","radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"bgcolor":"#E5ECF6","caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,0.2125]},"yaxis":{"anchor":"x","domain":[0.0,1.0]},"xaxis2":{"anchor":"y2","domain":[0.2625,0.475]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0]},"xaxis3":{"anchor":"y3","domain":[0.525,0.7375]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0]},"xaxis4":{"anchor":"y4","domain":[0.7875,1.0]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0]}},                        {"scrollZoom": true, "editable": true, "responsive": true}                    )                };                            </script>        </div>
+        <script>
+        // additional js function to select and click on the data
+        // returns the ids of the selected/clicked feature
+
+        var plotly_div = document.getElementById('9b277676-5067-46b1-a1a1-348021655ff3')
+        var plotly_data = plotly_div.data
+
+        // selecting function
+        plotly_div.on('plotly_selected', function(data){
+        var dds = {};
+        dds["mode"] = 'selection'
+        dds["type"] = data.points[0].data.type
+
+        featureIds = [];
+        featureIdsTernary = [];
+
+        data.points.forEach(function(pt){
+        featureIds.push(parseInt(pt.id))
+        featureIdsTernary.push(parseInt(pt.pointNumber))
+        dds["id"] = featureIds
+        dds["tid"] = featureIdsTernary
+            })
+        //console.log(dds)
+        window.status = JSON.stringify(dds)
+        })
+
+        // clicking function
+        plotly_div.on('plotly_click', function(data){
+        var featureIds = [];
+        var dd = {};
+        dd["fidd"] = data.points[0].id
+        dd["mode"] = 'clicking'
+
+        // loop and create dictionary depending on plot type
+        for(var i=0; i < data.points.length; i++){
+
+        // scatter plot
+        if(data.points[i].data.type == 'scatter'){
+            dd["uid"] = data.points[i].data.uid
+            dd["type"] = data.points[i].data.type
+
+            data.points.forEach(function(pt){
+            dd["fid"] = pt.id
+            })
+        }
+
+        // pie
+
+        else if(data.points[i].data.type == 'pie'){
+          dd["type"] = data.points[i].data.type
+          dd["label"] = data.points[i].label
+          dd["field"] = data.points[i].data.name
+          console.log(data.points[i].label)
+          console.log(data.points[i])
+        }
+
+        // histogram
+        else if(data.points[i].data.type == 'histogram'){
+            dd["type"] = data.points[i].data.type
+            dd["uid"] = data.points[i].data.uid
+            dd["field"] = data.points[i].data.name
+
+            // correct axis orientation
+            if(data.points[i].data.orientation == 'v'){
+                dd["id"] = data.points[i].x
+                dd["bin_step"] = data.points[i].fullData.xbins.size
+            }
+            else {
+                dd["id"] = data.points[i].y
+                dd["bin_step"] = data.points[i].fullData.ybins.size
+            }
+        }
+
+        // box plot
+        else if(data.points[i].data.type == 'box'){
+            dd["uid"] = data.points[i].data.uid
+            dd["type"] = data.points[i].data.type
+            dd["field"] = data.points[i].data.customdata[0]
+
+                // correct axis orientation
+                if(data.points[i].data.orientation == 'v'){
+                    dd["id"] = data.points[i].x
+                }
+                else {
+                    dd["id"] = data.points[i].y
+                }
+            }
+
+        // violin plot
+        else if(data.points[i].data.type == 'violin'){
+            dd["uid"] = data.points[i].data.uid
+            dd["type"] = data.points[i].data.type
+            dd["field"] = data.points[i].data.customdata[0]
+
+                // correct axis orientation (for violin is viceversa)
+                if(data.points[i].data.orientation == 'v'){
+                    dd["id"] = data.points[i].x
+                }
+                else {
+                    dd["id"] = data.points[i].y
+                }
+            }
+
+        // bar plot
+        else if(data.points[i].data.type == 'bar'){
+            dd["uid"] = data.points[i].data.uid
+            dd["type"] = data.points[i].data.type
+            dd["field"] = data.points[i].data.customdata[0]
+
+                // correct axis orientation
+                if(data.points[i].data.orientation == 'v'){
+                    dd["id"] = data.points[i].x
+                }
+                else {
+                    dd["id"] = data.points[i].y
+                }
+            }
+
+        // ternary
+        else if(data.points[i].data.type == 'scatterternary'){
+            dd["uid"] = data.points[i].data.uid
+            dd["type"] = data.points[i].data.type
+            dd["field"] = data.points[i].data.customdata
+            dd["fid"] = data.points[i].pointNumber
+            }
+
+            }
+        window.status = JSON.stringify(dd)
+        });
+        </script>
